@@ -40,24 +40,30 @@ int main(int argc, char **argv) {
         switch (option_index) {
           case 0:
             seed = atoi(optarg);
-            // your code here
-            // error handling
+            if (seed <= 0) {
+                printf("seed must be a positive number\n");
+                return 1;
+            }
             break;
           case 1:
             array_size = atoi(optarg);
-            // your code here
-            // error handling
+            if (array_size <= 0) {
+                printf("array_size must be a positive number\n");
+                return 1;
+            }
             break;
           case 2:
             pnum = atoi(optarg);
-            // your code here
-            // error handling
+            if (pnum <= 0) {
+                printf("pnum must be a positive number\n");
+                return 1;
+            }
             break;
           case 3:
             with_files = true;
             break;
 
-          defalut:
+          default:
             printf("Index %d is out of options\n", option_index);
         }
         break;
@@ -88,27 +94,45 @@ int main(int argc, char **argv) {
   GenerateArray(array, array_size, seed);
   int active_child_processes = 0;
 
+  // Создаем pipes заранее, если не используем файлы
+  int pipes[pnum][2];
+  if (!with_files) {
+    for (int i = 0; i < pnum; i++) {
+      if (pipe(pipes[i]) == -1) {
+        perror("pipe");
+        return 1;
+      }
+    }
+  }
+
   struct timeval start_time;
   gettimeofday(&start_time, NULL);
 
   for (int i = 0; i < pnum; i++) {
     pid_t child_pid = fork();
     if (child_pid >= 0) {
-      // successful fork
       active_child_processes += 1;
       if (child_pid == 0) {
-        // child process
-
-        // parallel somehow
+        // Дочерний процесс
+        unsigned int begin = i * (array_size / pnum);
+        unsigned int end = (i == pnum - 1) ? array_size : (i + 1) * (array_size / pnum);
+        
+        struct MinMax min_max = GetMinMax(array, begin, end);
 
         if (with_files) {
-          // use files here
+          char filename[50];
+          sprintf(filename, "tmp_%d.txt", i);
+          FILE *f = fopen(filename, "w");
+          fprintf(f, "%d %d", min_max.min, min_max.max);
+          fclose(f);
         } else {
-          // use pipe here
+          close(pipes[i][0]); // Закрываем чтение
+          write(pipes[i][1], &min_max.min, sizeof(int));
+          write(pipes[i][1], &min_max.max, sizeof(int));
+          close(pipes[i][1]); // Закрываем запись
         }
-        return 0;
+        return 0; // Завершаем дочерний процесс
       }
-
     } else {
       printf("Fork failed!\n");
       return 1;
@@ -116,8 +140,7 @@ int main(int argc, char **argv) {
   }
 
   while (active_child_processes > 0) {
-    // your code here
-
+    wait(NULL); // Ожидаем завершения любого дочернего процесса
     active_child_processes -= 1;
   }
 
@@ -130,9 +153,17 @@ int main(int argc, char **argv) {
     int max = INT_MIN;
 
     if (with_files) {
-      // read from files
+      char filename[50];
+      sprintf(filename, "tmp_%d.txt", i);
+      FILE *f = fopen(filename, "r");
+      fscanf(f, "%d %d", &min, &max);
+      fclose(f);
+      remove(filename); // Удаляем временный файл
     } else {
-      // read from pipes
+      close(pipes[i][1]); // Закрываем запись в родителе
+      read(pipes[i][0], &min, sizeof(int));
+      read(pipes[i][0], &max, sizeof(int));
+      close(pipes[i][0]); // Закрываем чтение
     }
 
     if (min < min_max.min) min_max.min = min;

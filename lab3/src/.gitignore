@@ -1,0 +1,10 @@
+# Игнорировать объектные файлы
+*.o
+
+# Игнорировать исполняемые файлы (наши программы)
+sequential_min_max
+parallel_min_max
+run_sequential
+
+# Игнорировать временные файлы от parallel_min_max
+tmp_*.txt
