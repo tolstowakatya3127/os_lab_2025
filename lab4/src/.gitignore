@@ -1,0 +1,17 @@
+# Объектные файлы
+*.o
+
+# Статические библиотеки
+*.a
+
+# Скомпилированные программы
+parallel_min_max
+process_memory
+parallel_sum
+zombie
+
+# Временные файлы от parallel_min_max --by_files
+tmp_*.txt
+
+# Настройки редактора
+.vscode/
