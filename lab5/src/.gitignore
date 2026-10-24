@@ -1,0 +1,13 @@
+# Объектные файлы и библиотеки
+*.o
+*.a
+
+# Бинарники (программы) для 5-й лабы
+mutex_nolock
+mutex_lock
+parallel_factorial
+deadlock
+deadlock_fixed
+
+# Настройки редактора
+.vscode/
