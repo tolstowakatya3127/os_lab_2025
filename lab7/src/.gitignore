@@ -1,0 +1,12 @@
+# Объектные файлы
+*.o
+
+# Исполняемые файлы для 7-й лабы
+tcpserver
+tcpclient
+udpserver
+udpclient
+
+# Настройки редактора и системные файлы
+.vscode/
+.DS_Store
